@@ -1,0 +1,42 @@
+{
+  "dataset": "UNSW-NB15 official testing set",
+  "test_samples": 175341,
+  "features": 42,
+  "accuracy": 0.9025384821576243,
+  "attack_precision": 0.9877876579017669,
+  "attack_recall": 0.8675308569561173,
+  "attack_f1": 0.923761894777228,
+  "confusion_matrix": {
+    "true_negative": 54720,
+    "false_positive": 1280,
+    "false_negative": 15809,
+    "true_positive": 103532
+  },
+  "classification_report": {
+    "Normal": {
+      "precision": 0.7758510683548612,
+      "recall": 0.9771428571428571,
+      "f1-score": 0.8649400532684207,
+      "support": 56000.0
+    },
+    "Attack": {
+      "precision": 0.9877876579017669,
+      "recall": 0.8675308569561173,
+      "f1-score": 0.923761894777228,
+      "support": 119341.0
+    },
+    "accuracy": 0.9025384821576243,
+    "macro avg": {
+      "precision": 0.881819363128314,
+      "recall": 0.9223368570494872,
+      "f1-score": 0.8943509740228244,
+      "support": 175341.0
+    },
+    "weighted avg": {
+      "precision": 0.9200998437874028,
+      "recall": 0.9025384821576243,
+      "f1-score": 0.904975512102935,
+      "support": 175341.0
+    }
+  }
+}

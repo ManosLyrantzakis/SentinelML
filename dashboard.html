@@ -466,5 +466,57 @@ $("clearHistory").addEventListener("click", () => {
 checkApi();
 renderHistory();
 </script>
+
+<script>
+async function loadModelMetrics() {
+    try {
+        const response = await fetch("/metrics");
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const metrics = await response.json();
+        const matrix = metrics.confusion_matrix;
+
+        const values = {
+            "accuracy-value": metrics.accuracy,
+            "precision-value": metrics.attack_precision,
+            "recall-value": metrics.attack_recall,
+            "f1-value": metrics.attack_f1
+        };
+
+        for (const [id, value] of Object.entries(values)) {
+            const element = document.getElementById(id);
+
+            if (element) {
+                element.textContent =
+                    `${(value * 100).toFixed(2)}%`;
+            }
+        }
+
+        const confusionValues = {
+            "tn-value": matrix.true_negative,
+            "fp-value": matrix.false_positive,
+            "fn-value": matrix.false_negative,
+            "tp-value": matrix.true_positive
+        };
+
+        for (const [id, value] of Object.entries(confusionValues)) {
+            const element = document.getElementById(id);
+
+            if (element) {
+                element.textContent =
+                    value.toLocaleString("en-US");
+            }
+        }
+    } catch (error) {
+        console.error("Failed to load model metrics:", error);
+    }
+}
+
+loadModelMetrics();
+</script>
+
 </body>
 </html>

@@ -1,6 +1,7 @@
 
 from pathlib import Path
 
+import json
 import joblib
 import pandas as pd
 from fastapi import FastAPI
@@ -75,6 +76,19 @@ def home():
 @app.get("/dashboard", include_in_schema=False)
 def dashboard():
     return FileResponse(BASE_DIR / "dashboard.html")
+
+@app.get("/metrics")
+def get_metrics():
+    metrics_path = BASE_DIR / "reports" / "unsw_test_metrics.json"
+
+    if not metrics_path.exists():
+        return {
+            "error": "Metrics report not found. Run evaluate_model.py first."
+        }
+
+    with metrics_path.open("r", encoding="utf-8") as file:
+        return json.load(file)
+    
 
 @app.post("/predict")
 def predict(traffic: NetworkTraffic):
