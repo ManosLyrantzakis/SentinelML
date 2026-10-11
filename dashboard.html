@@ -5,47 +5,76 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SentinelML | Security Intelligence</title>
+
 <style>
 :root {
-  --bg:#080d18; --panel:#111a2b; --panel2:#0b1322;
-  --border:#243249; --text:#edf3ff; --muted:#91a0b8;
-  --cyan:#5ee7f5; --green:#4adea8; --red:#ff7185;
+  --bg:#080d18;
+  --panel:#111a2b;
+  --panel2:#0b1322;
+  --border:#243249;
+  --text:#edf3ff;
+  --muted:#91a0b8;
+  --cyan:#5ee7f5;
+  --green:#4adea8;
+  --red:#ff7185;
   --yellow:#facc72;
 }
 * { box-sizing:border-box; }
 body {
-  margin:0; background:var(--bg); color:var(--text);
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
   font-family:Inter,Segoe UI,Arial,sans-serif;
-  font-size:14px; line-height:1.6;
+  font-size:14px;
+  line-height:1.6;
 }
 button,textarea { font:inherit; }
 button { cursor:pointer; }
+button:disabled { opacity:.55; cursor:wait; }
 .layout { display:flex; min-height:100vh; }
 .sidebar {
-  width:230px; flex-shrink:0; padding:26px 18px;
-  border-right:1px solid var(--border); background:#0b1220;
+  width:230px;
+  flex-shrink:0;
+  padding:26px 18px;
+  border-right:1px solid var(--border);
+  background:#0b1220;
 }
 .brand { font-weight:800; font-size:18px; letter-spacing:1px; }
 .brand span { color:var(--cyan); }
 .brand-sub { color:var(--muted); font-size:11px; margin-top:3px; }
 .nav-label {
-  color:#71819a; font-size:10px; font-weight:700;
-  letter-spacing:1.8px; margin:38px 10px 12px;
+  color:#71819a;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1.8px;
+  margin:38px 10px 12px;
 }
 .nav-item {
-  display:block; color:#aab8ce; padding:11px 12px;
-  margin-bottom:5px; border-radius:8px; text-decoration:none;
+  display:block;
+  color:#aab8ce;
+  padding:11px 12px;
+  margin-bottom:5px;
+  border-radius:8px;
+  text-decoration:none;
 }
 .nav-item.active { background:#142b3c; color:var(--cyan); }
 .nav-item:hover { background:#152235; }
 .sidebar-note {
-  margin-top:50px; padding:13px; border:1px solid var(--border);
-  border-radius:10px; color:var(--muted); font-size:12px;
+  margin-top:50px;
+  padding:13px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--muted);
+  font-size:12px;
 }
 main { min-width:0; flex:1; padding:30px; max-width:1500px; }
 .topbar {
-  display:flex; justify-content:space-between; align-items:center;
-  gap:15px; flex-wrap:wrap; margin-bottom:28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  flex-wrap:wrap;
+  margin-bottom:28px;
 }
 .eyebrow { color:var(--cyan); font-size:11px; letter-spacing:2px; }
 h1 { font-size:29px; line-height:1.2; margin:5px 0; }
@@ -54,17 +83,28 @@ h3 { font-size:14px; margin:0 0 12px; }
 .muted { color:var(--muted); }
 .small { font-size:12px; }
 .status {
-  display:inline-flex; align-items:center; gap:8px;
-  padding:8px 12px; border:1px solid var(--border);
-  border-radius:30px; color:var(--muted); font-size:12px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:30px;
+  color:var(--muted);
+  font-size:12px;
 }
 .dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); }
 .dot.online { background:var(--green); }
 .grid { display:grid; gap:16px; }
-.metrics { grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:20px; }
+.metrics {
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  margin-bottom:20px;
+}
 .panel,.metric {
-  background:var(--panel); border:1px solid var(--border);
-  border-radius:13px; padding:20px; min-width:0;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:20px;
+  min-width:0;
 }
 .metric-label { color:var(--muted); font-size:12px; }
 .metric-value { font-size:29px; font-weight:750; margin:7px 0 2px; }
@@ -75,52 +115,82 @@ h3 { font-size:14px; margin:0 0 12px; }
 .yellow { color:var(--yellow); }
 .main-grid { grid-template-columns:minmax(0,1.35fr) minmax(280px,.8fr); }
 .panel-head {
-  display:flex; justify-content:space-between; align-items:center;
-  gap:12px; flex-wrap:wrap; margin-bottom:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
 }
 .pill {
-  border:1px solid var(--border); border-radius:20px;
-  padding:4px 9px; color:var(--muted); font-size:11px;
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:4px 9px;
+  color:var(--muted);
+  font-size:11px;
 }
 textarea {
-  width:100%; min-height:400px; resize:vertical;
-  background:var(--panel2); color:#b7f7d7;
-  border:1px solid #30415d; border-radius:9px;
-  padding:14px; font:12px/1.7 Consolas,monospace;
+  width:100%;
+  min-height:400px;
+  resize:vertical;
+  background:var(--panel2);
+  color:#b7f7d7;
+  border:1px solid #30415d;
+  border-radius:9px;
+  padding:14px;
+  font:12px/1.7 Consolas,monospace;
   outline:none;
 }
 textarea:focus { border-color:var(--cyan); }
 .btn {
-  border:0; border-radius:8px; padding:12px 16px;
-  font-weight:750; transition:opacity .15s;
+  border:0;
+  border-radius:8px;
+  padding:12px 16px;
+  font-weight:750;
+  transition:opacity .15s;
 }
-.btn:disabled { opacity:.55; cursor:wait; }
 .primary { background:var(--cyan); color:#07121c; }
-.secondary { background:#1c2a40; color:var(--text); border:1px solid var(--border); }
+.secondary {
+  background:#1c2a40;
+  color:var(--text);
+  border:1px solid var(--border);
+}
 .actions { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
 .actions .primary { flex:1; }
 .result {
-  display:none; margin-top:16px; padding:16px;
-  border:1px solid var(--border); border-radius:10px;
+  display:none;
+  margin-top:16px;
+  padding:16px;
+  border:1px solid var(--border);
+  border-radius:10px;
   background:var(--panel2);
 }
 .result.attack { border-color:#713849; }
 .result.normal { border-color:#23664f; }
 .result-title { font-size:19px; font-weight:800; margin-bottom:5px; }
 .notice {
-  margin-top:14px; border-left:3px solid var(--yellow);
-  padding:10px 12px; background:#201d18;
-  color:#d4c6a8; font-size:12px;
+  margin-top:14px;
+  border-left:3px solid var(--yellow);
+  padding:10px 12px;
+  background:#201d18;
+  color:#d4c6a8;
+  font-size:12px;
 }
 .bar-row {
-  display:grid; grid-template-columns:85px 1fr 48px;
-  align-items:center; gap:10px; margin:15px 0;
+  display:grid;
+  grid-template-columns:85px 1fr 55px;
+  align-items:center;
+  gap:10px;
+  margin:15px 0;
   font-size:12px;
 }
 .bar { height:8px; background:#202d41; border-radius:10px; overflow:hidden; }
 .fill { height:100%; border-radius:10px; background:var(--cyan); }
 .matrix {
-  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:14px;
 }
 .cell { padding:13px 8px; background:var(--panel2); border-radius:8px; }
 .cell strong { display:block; font-size:19px; }
@@ -128,7 +198,11 @@ textarea:focus { border-color:var(--cyan); }
 .section { margin-top:20px; }
 .table-wrap { overflow-x:auto; }
 table { width:100%; border-collapse:collapse; text-align:left; }
-th,td { padding:12px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+th,td {
+  padding:12px 10px;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
 th { color:var(--muted); font-size:11px; font-weight:600; }
 td { font-size:12px; }
 .tag { border-radius:5px; padding:3px 7px; font-size:11px; font-weight:700; }
@@ -137,6 +211,7 @@ td { font-size:12px; }
 .empty { color:var(--muted); text-align:center; padding:25px; }
 footer { padding:24px 0 8px; color:var(--muted); font-size:11px; }
 a { color:var(--cyan); text-decoration:none; }
+
 @media(max-width:1050px) {
   .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .main-grid { grid-template-columns:1fr; }
@@ -153,8 +228,10 @@ a { color:var(--cyan); text-decoration:none; }
 }
 </style>
 </head>
+
 <body>
 <div class="layout">
+
   <aside class="sidebar">
     <div class="brand">◈ SENTINEL<span>ML</span></div>
     <div class="brand-sub">NETWORK SECURITY INTELLIGENCE</div>
@@ -179,7 +256,9 @@ a { color:var(--cyan); text-decoration:none; }
         <h1>Network Intelligence</h1>
         <div class="muted">Traffic classification and model evaluation</div>
       </div>
-      <div class="status"><span class="dot" id="statusDot"></span>
+
+      <div class="status">
+        <span class="dot" id="statusDot"></span>
         API: <strong id="apiStatus">Checking...</strong>
       </div>
     </header>
@@ -187,34 +266,43 @@ a { color:var(--cyan); text-decoration:none; }
     <section class="grid metrics" aria-label="Model metrics">
       <div class="metric">
         <div class="metric-label">TEST ACCURACY</div>
-        <div class="metric-value cyan">90.25%</div>
+        <div class="metric-value cyan" id="accuracy-value">90.25%</div>
         <div class="metric-foot">Held-out test set</div>
       </div>
+
       <div class="metric">
         <div class="metric-label">ATTACK PRECISION</div>
-        <div class="metric-value">98.78%</div>
+        <div class="metric-value" id="precision-value">98.78%</div>
         <div class="metric-foot">Predicted attacks that were attacks</div>
       </div>
+
       <div class="metric">
         <div class="metric-label">ATTACK RECALL</div>
-        <div class="metric-value yellow">86.75%</div>
+        <div class="metric-value yellow" id="recall-value">86.75%</div>
         <div class="metric-foot">Attacks detected in the test set</div>
       </div>
+
       <div class="metric">
         <div class="metric-label">ATTACK F1-SCORE</div>
-        <div class="metric-value green">92.38%</div>
+        <div class="metric-value green" id="f1-value">92.38%</div>
         <div class="metric-foot">Precision/recall balance</div>
       </div>
     </section>
 
     <div class="grid main-grid">
+
       <section class="panel" id="analysis">
         <div class="panel-head">
           <h2>Traffic Analysis</h2>
           <span class="pill">RANDOM FOREST</span>
         </div>
-        <p class="muted small">Submit one record containing all required network traffic features.</p>
+
+        <p class="muted small">
+          Submit one record containing all required network traffic features.
+        </p>
+
         <label for="traffic">Input features · JSON</label>
+
         <textarea id="traffic" spellcheck="false">{
   "dur": 0,
   "proto": "tcp",
@@ -259,14 +347,17 @@ a { color:var(--cyan); text-decoration:none; }
   "ct_srv_dst": 1,
   "is_sm_ips_ports": 0
 }</textarea>
+
         <div class="actions">
           <button class="btn primary" id="analyze">Analyze Traffic →</button>
           <button class="btn secondary" id="reset">Reset Sample</button>
         </div>
+
         <div class="result" id="result" aria-live="polite">
           <div class="result-title" id="resultTitle"></div>
           <div id="resultText" class="muted"></div>
         </div>
+
         <div class="notice">
           This is an educational model prediction, not confirmation of a real cyberattack.
           The sample above is synthetic.
@@ -278,29 +369,60 @@ a { color:var(--cyan); text-decoration:none; }
           <h2>Model Performance</h2>
           <span class="pill">TEST SET</span>
         </div>
-        <p class="muted small">Reported results from the existing evaluation. These are not live metrics.</p>
+
+        <p class="muted small">
+          Reported results from the existing evaluation. These are not live metrics.
+        </p>
+
         <div class="bar-row">
-          <span>Accuracy</span><div class="bar"><div class="fill" style="width:90.25%"></div></div><strong>90.25%</strong>
+          <span>Accuracy</span>
+          <div class="bar"><div class="fill" id="accuracy-bar" style="width:90.25%"></div></div>
+          <strong id="accuracy-bar-value">90.25%</strong>
         </div>
+
         <div class="bar-row">
-          <span>Precision</span><div class="bar"><div class="fill" style="width:98.78%"></div></div><strong>98.78%</strong>
+          <span>Precision</span>
+          <div class="bar"><div class="fill" id="precision-bar" style="width:98.78%"></div></div>
+          <strong id="precision-bar-value">98.78%</strong>
         </div>
+
         <div class="bar-row">
-          <span>Recall</span><div class="bar"><div class="fill" style="width:86.75%"></div></div><strong>86.75%</strong>
+          <span>Recall</span>
+          <div class="bar"><div class="fill" id="recall-bar" style="width:86.75%"></div></div>
+          <strong id="recall-bar-value">86.75%</strong>
         </div>
+
         <div class="bar-row">
-          <span>F1-score</span><div class="bar"><div class="fill" style="width:92.38%"></div></div><strong>92.38%</strong>
+          <span>F1-score</span>
+          <div class="bar"><div class="fill" id="f1-bar" style="width:92.38%"></div></div>
+          <strong id="f1-bar-value">92.38%</strong>
         </div>
 
         <h3 style="margin-top:28px">Confusion Matrix</h3>
         <p class="muted small">Actual class vs predicted class · test set</p>
+
         <div class="matrix">
-          <div class="cell"><span>True Negative (TN)</span><strong class="green">54,720</strong></div>
-          <div class="cell"><span>False Positive (FP)</span><strong class="yellow">1,280</strong></div>
-          <div class="cell"><span>False Negative (FN)</span><strong class="red">15,809</strong></div>
-          <div class="cell"><span>True Positive (TP)</span><strong class="green">103,532</strong></div>
+          <div class="cell">
+            <span>True Negative (TN)</span>
+            <strong class="green" id="tn-value">54,720</strong>
+          </div>
+          <div class="cell">
+            <span>False Positive (FP)</span>
+            <strong class="yellow" id="fp-value">1,280</strong>
+          </div>
+          <div class="cell">
+            <span>False Negative (FN)</span>
+            <strong class="red" id="fn-value">15,809</strong>
+          </div>
+          <div class="cell">
+            <span>True Positive (TP)</span>
+            <strong class="green" id="tp-value">103,532</strong>
+          </div>
         </div>
-        <p class="muted small">The false negatives matter: some attacks were missed during evaluation.</p>
+
+        <p class="muted small">
+          The false negatives matter: some attacks were missed during evaluation.
+        </p>
       </section>
     </div>
 
@@ -308,18 +430,30 @@ a { color:var(--cyan); text-decoration:none; }
       <div class="panel-head">
         <div>
           <h2>Prediction History</h2>
-          <div class="muted small">Recent predictions saved in this browser only</div>
+          <div class="muted small">Recent predictions saved by the backend</div>
         </div>
         <button class="btn secondary" id="clearHistory">Clear History</button>
       </div>
+
       <div class="table-wrap">
         <table>
-          <thead><tr><th>TIME</th><th>RESULT</th><th>MODEL OUTPUT</th></tr></thead>
-          <tbody id="historyRows"></tbody>
+          <thead>
+            <tr>
+              <th>TIME</th>
+              <th>RESULT</th>
+              <th>MODEL OUTPUT</th>
+            </tr>
+          </thead>
+          <tbody id="historyRows">
+            <tr>
+              <td colspan="3" class="empty">Loading prediction history...</td>
+            </tr>
+          </tbody>
         </table>
       </div>
+
       <div class="muted small" style="margin-top:12px">
-        Browser-local history is not shared across devices and may disappear if browser data is cleared.
+        History is retrieved from the backend API.
       </div>
     </section>
 
@@ -332,189 +466,354 @@ a { color:var(--cyan); text-decoration:none; }
 </div>
 
 <script>
+"use strict";
+
 const $ = id => document.getElementById(id);
+
 const textarea = $("traffic");
-const button = $("analyze");
+const analyzeButton = $("analyze");
+const resetButton = $("reset");
+const clearHistoryButton = $("clearHistory");
 const result = $("result");
 const originalSample = textarea.value;
-const HISTORY_KEY = "sentinelml_prediction_history_v1";
 
-function getHistory() {
-  try {
-    const items = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-    return Array.isArray(items) ? items : [];
-  } catch {
-    return [];
-  }
-}
+let isAnalyzing = false;
+let isClearingHistory = false;
 
-function renderHistory() {
+
+// --------------------------------------------------
+// PREDICTION HISTORY: LOAD FROM BACKEND
+// --------------------------------------------------
+
+async function renderHistory() {
   const rows = $("historyRows");
-  const history = getHistory();
+
   rows.replaceChildren();
 
-  if (!history.length) {
+  try {
+    const response = await fetch("/history?limit=20", {
+      headers: { "Accept": "application/json" }
+    });
+
+    if (!response.ok) {
+      throw new Error("History API returned HTTP " + response.status);
+    }
+
+    const data = await response.json();
+    const history = Array.isArray(data.history) ? data.history : [];
+
+    if (history.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+
+      td.colSpan = 3;
+      td.className = "empty";
+      td.textContent =
+        "No predictions yet. Analyze traffic to create your first entry.";
+
+      tr.appendChild(td);
+      rows.appendChild(tr);
+      return;
+    }
+
+    history.forEach(item => {
+      const tr = document.createElement("tr");
+      const timeCell = document.createElement("td");
+      const labelCell = document.createElement("td");
+      const outputCell = document.createElement("td");
+      const tag = document.createElement("span");
+
+      const date = new Date(item.timestamp);
+
+      timeCell.textContent = Number.isNaN(date.getTime())
+        ? String(item.timestamp ?? "Unknown")
+        : date.toLocaleString();
+
+      tag.className =
+        "tag " + (item.label === "Attack" ? "attack" : "normal");
+
+      tag.textContent = String(item.label ?? "Unknown");
+      labelCell.appendChild(tag);
+
+      outputCell.textContent = String(item.prediction ?? "N/A");
+
+      tr.append(timeCell, labelCell, outputCell);
+      rows.appendChild(tr);
+    });
+
+  } catch (error) {
+    console.error("Failed to load prediction history:", error);
+
     const tr = document.createElement("tr");
     const td = document.createElement("td");
+
     td.colSpan = 3;
     td.className = "empty";
-    td.textContent = "No predictions yet. Analyze traffic to create your first entry.";
+    td.textContent =
+      "Unable to load history. Check that the backend is running and the /history endpoint exists.";
+
     tr.appendChild(td);
     rows.appendChild(tr);
-    return;
   }
-
-  history.forEach(item => {
-    const tr = document.createElement("tr");
-    const time = document.createElement("td");
-    const label = document.createElement("td");
-    const output = document.createElement("td");
-    const tag = document.createElement("span");
-
-    time.textContent = item.time;
-    tag.className = "tag " + (item.label === "Attack" ? "attack" : "normal");
-    tag.textContent = item.label;
-    label.appendChild(tag);
-    output.textContent = String(item.prediction);
-
-    tr.append(time, label, output);
-    rows.appendChild(tr);
-  });
 }
+
+
+// --------------------------------------------------
+// CLEAR HISTORY: DELETE FROM BACKEND
+// --------------------------------------------------
+
+clearHistoryButton.addEventListener("click", async () => {
+  if (isClearingHistory) return;
+
+  const confirmed = window.confirm(
+    "Are you sure you want to delete all prediction history?"
+  );
+
+  if (!confirmed) return;
+
+  isClearingHistory = true;
+  clearHistoryButton.disabled = true;
+  clearHistoryButton.textContent = "Clearing...";
+
+  try {
+    const response = await fetch("/history", {
+      method: "DELETE",
+      headers: { "Accept": "application/json" }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || "Could not clear prediction history."
+      );
+    }
+
+    await renderHistory();
+
+  } catch (error) {
+    console.error("Failed to clear prediction history:", error);
+    window.alert(
+      "Failed to clear history. Check the backend and try again."
+    );
+
+  } finally {
+    isClearingHistory = false;
+    clearHistoryButton.disabled = false;
+    clearHistoryButton.textContent = "Clear History";
+  }
+});
+
+
+// --------------------------------------------------
+// API CONNECTION STATUS
+// --------------------------------------------------
 
 async function checkApi() {
+  const statusText = $("apiStatus");
+  const statusDot = $("statusDot");
+
   try {
-    const response = await fetch("/");
-    if (!response.ok) throw new Error("API unavailable");
+    const response = await fetch("/", {
+      headers: { "Accept": "application/json" }
+    });
+
+    if (!response.ok) {
+      throw new Error("API unavailable");
+    }
+
     const data = await response.json();
     const online = data.status === "running";
-    $("apiStatus").textContent = online ? "Connected" : "Responding";
-    $("statusDot").classList.toggle("online", online);
-  } catch {
-    $("apiStatus").textContent = "Unavailable";
-    $("statusDot").classList.remove("online");
+
+    statusText.textContent = online ? "Connected" : "Responding";
+    statusDot.classList.toggle("online", online);
+
+  } catch (error) {
+    statusText.textContent = "Unavailable";
+    statusDot.classList.remove("online");
+    console.error("API connection check failed:", error);
   }
 }
 
-button.addEventListener("click", async () => {
+
+// --------------------------------------------------
+// ANALYZE TRAFFIC
+// --------------------------------------------------
+
+analyzeButton.addEventListener("click", async () => {
+  if (isAnalyzing) return;
+
+  isAnalyzing = true;
+  analyzeButton.disabled = true;
+  analyzeButton.textContent = "Analyzing...";
+
   result.style.display = "block";
   result.className = "result";
   $("resultTitle").textContent = "Analyzing traffic...";
   $("resultText").textContent = "Sending features to the model.";
-  button.disabled = true;
 
   try {
-    const traffic = JSON.parse(textarea.value);
-    if (!traffic || Array.isArray(traffic) || typeof traffic !== "object") {
-      throw new Error("Enter a single JSON object.");
+    let traffic;
+
+    try {
+      traffic = JSON.parse(textarea.value);
+    } catch {
+      throw new Error("Invalid JSON. Check quotes, commas, and braces.");
+    }
+
+    if (
+      traffic === null ||
+      Array.isArray(traffic) ||
+      typeof traffic !== "object"
+    ) {
+      throw new Error("Enter one JSON object containing the traffic features.");
     }
 
     const response = await fetch("/predict", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
       body: JSON.stringify(traffic)
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      const detail = typeof data.detail === "string"
-        ? data.detail : JSON.stringify(data.detail || data);
-      throw new Error(detail);
+      let message = data.detail;
+
+      if (typeof message !== "string") {
+        message = message
+          ? JSON.stringify(message)
+          : "Prediction failed with HTTP " + response.status;
+      }
+
+      throw new Error(message);
+    }
+
+    if (data.label !== "Attack" && data.label !== "Normal") {
+      throw new Error("The API returned an unexpected prediction.");
     }
 
     const isAttack = data.label === "Attack";
-    result.classList.add(isAttack ? "attack" : "normal");
-    $("resultTitle").textContent = isAttack
-      ? "⚠ Attack predicted" : "✓ Normal predicted";
-    $("resultText").textContent =
-      "Model output: " + data.label + " (prediction: " + data.prediction + "). " +
-      "This is a classification result, not proof of a real attack.";
 
-    const history = getHistory();
-    history.unshift({
-      time: new Date().toLocaleString(),
-      label: data.label,
-      prediction: data.prediction
-    });
-    try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 20)));
-    } catch {
-      // The current prediction still displays if browser storage is unavailable.
-    }
-    renderHistory();
+    result.className = "result " + (isAttack ? "attack" : "normal");
+
+    $("resultTitle").textContent = isAttack
+      ? "⚠ Attack predicted"
+      : "✓ Normal predicted";
+
+    $("resultText").textContent =
+      "Model output: " + data.label +
+      " (prediction: " + data.prediction + "). " +
+      "This classification is not proof of a real attack.";
+
+    // The backend saves the prediction in SQLite.
+    // Reload the table from the backend instead of browser storage.
+    await renderHistory();
+
   } catch (error) {
     result.className = "result";
     $("resultTitle").textContent = "Request failed";
-    $("resultText").textContent = error instanceof SyntaxError
-      ? "Invalid JSON. Check quotes, commas, and braces."
-      : error.message;
+    $("resultText").textContent = error.message || "An unexpected error occurred.";
+    console.error("Prediction request failed:", error);
+
   } finally {
-    button.disabled = false;
+    isAnalyzing = false;
+    analyzeButton.disabled = false;
+    analyzeButton.textContent = "Analyze Traffic →";
   }
 });
 
-$("reset").addEventListener("click", () => {
+
+// --------------------------------------------------
+// RESET SAMPLE
+// --------------------------------------------------
+
+resetButton.addEventListener("click", () => {
   textarea.value = originalSample;
   result.style.display = "none";
+  result.className = "result";
+  $("resultTitle").textContent = "";
+  $("resultText").textContent = "";
 });
 
-$("clearHistory").addEventListener("click", () => {
-  try { localStorage.removeItem(HISTORY_KEY); } catch {}
-  renderHistory();
-});
+
+// --------------------------------------------------
+// LOAD MODEL METRICS FROM BACKEND
+// --------------------------------------------------
+
+async function loadModelMetrics() {
+  try {
+    const response = await fetch("/metrics", {
+      headers: { "Accept": "application/json" }
+    });
+
+    if (!response.ok) {
+      throw new Error("Metrics API returned HTTP " + response.status);
+    }
+
+    const metrics = await response.json();
+
+    function updatePercentage(id, value) {
+      const element = $(id);
+
+      if (element && typeof value === "number" && Number.isFinite(value)) {
+        const percentage = (value * 100).toFixed(2) + "%";
+        element.textContent = percentage;
+
+        const barId = id.replace("-value", "-bar");
+        const bar = $(barId);
+
+        if (bar) {
+          bar.style.width = Math.max(0, Math.min(100, value * 100)) + "%";
+        }
+
+        const barValue = $(barId + "-value");
+
+        if (barValue) {
+          barValue.textContent = percentage;
+        }
+      }
+    }
+
+    updatePercentage("accuracy-value", metrics.accuracy);
+    updatePercentage("precision-value", metrics.attack_precision);
+    updatePercentage("recall-value", metrics.attack_recall);
+    updatePercentage("f1-value", metrics.attack_f1);
+
+    const matrix = metrics.confusion_matrix;
+
+    if (matrix && typeof matrix === "object") {
+      const confusionValues = {
+        "tn-value": matrix.true_negative,
+        "fp-value": matrix.false_positive,
+        "fn-value": matrix.false_negative,
+        "tp-value": matrix.true_positive
+      };
+
+      for (const [id, value] of Object.entries(confusionValues)) {
+        const element = $(id);
+
+        if (element && typeof value === "number" && Number.isFinite(value)) {
+          element.textContent = value.toLocaleString("en-US");
+        }
+      }
+    }
+
+  } catch (error) {
+    // The values already in the HTML remain visible as fallback values.
+    console.error("Failed to load model metrics:", error);
+  }
+}
+
+
+// --------------------------------------------------
+// INITIAL PAGE LOAD
+// --------------------------------------------------
 
 checkApi();
 renderHistory();
-</script>
-
-<script>
-async function loadModelMetrics() {
-    try {
-        const response = await fetch("/metrics");
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-        const metrics = await response.json();
-        const matrix = metrics.confusion_matrix;
-
-        const values = {
-            "accuracy-value": metrics.accuracy,
-            "precision-value": metrics.attack_precision,
-            "recall-value": metrics.attack_recall,
-            "f1-value": metrics.attack_f1
-        };
-
-        for (const [id, value] of Object.entries(values)) {
-            const element = document.getElementById(id);
-
-            if (element) {
-                element.textContent =
-                    `${(value * 100).toFixed(2)}%`;
-            }
-        }
-
-        const confusionValues = {
-            "tn-value": matrix.true_negative,
-            "fp-value": matrix.false_positive,
-            "fn-value": matrix.false_negative,
-            "tp-value": matrix.true_positive
-        };
-
-        for (const [id, value] of Object.entries(confusionValues)) {
-            const element = document.getElementById(id);
-
-            if (element) {
-                element.textContent =
-                    value.toLocaleString("en-US");
-            }
-        }
-    } catch (error) {
-        console.error("Failed to load model metrics:", error);
-    }
-}
-
 loadModelMetrics();
 </script>
 

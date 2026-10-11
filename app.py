@@ -8,8 +8,13 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+import sqlite3
+from datetime import datetime, timezone
+
+
 
 BASE_DIR = Path(__file__).resolve().parent
+DATABASE_PATH = BASE_DIR / "sentinelml_history.db"
 MODEL_PATH = BASE_DIR / "models" / "random_forest_model.joblib"
 
 model = joblib.load(MODEL_PATH)
@@ -19,6 +24,20 @@ app = FastAPI(
     description="Machine Learning Network Intrusion Detection API",
     version="1.0.0",
 )
+
+def init_history_db():
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS prediction_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                prediction INTEGER NOT NULL,
+                label TEXT NOT NULL
+            )
+        """)
+
+
+init_history_db()
 
 
 class NetworkTraffic(BaseModel):
@@ -94,8 +113,50 @@ def get_metrics():
 def predict(traffic: NetworkTraffic):
     features = pd.DataFrame([traffic.model_dump()])
     prediction = int(model.predict(features)[0])
+    label = "Attack" if prediction == 1 else "Normal"
+
+    timestamp = datetime.now(timezone.utc).isoformat()
+
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        cursor = connection.execute(
+            """
+            INSERT INTO prediction_history (timestamp, prediction, label)
+            VALUES (?, ?, ?)
+            """,
+            (timestamp, prediction, label)
+        )
+        prediction_id = cursor.lastrowid
 
     return {
+        "id": prediction_id,
+        "timestamp": timestamp,
         "prediction": prediction,
-        "label": "Attack" if prediction == 1 else "Normal",
+        "label": label
     }
+
+
+@app.get("/history")
+def get_history(limit: int = 20):
+    limit = max(1, min(limit, 100))
+
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        connection.row_factory = sqlite3.Row
+        rows = connection.execute(
+            """
+            SELECT id, timestamp, prediction, label
+            FROM prediction_history
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,)
+        ).fetchall()
+
+    return {"history": [dict(row) for row in rows]}
+
+
+@app.delete("/history")
+def clear_history():
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        connection.execute("DELETE FROM prediction_history")
+
+    return {"message": "Prediction history cleared"}

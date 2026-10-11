@@ -26,3 +26,5 @@ Thumbs.db
 
 
 archive.zip
+# Local prediction history database
+sentinelml_history.db
