@@ -2,62 +2,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SentinelML | Traffic Analysis</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh; padding: 40px 18px;
-      background: #0b1020; color: #e5e7eb;
-      font-family: Inter, Arial, sans-serif;
-    }
-    main { max-width: 900px; margin: auto; }
-    header, section {
-      background: #141c30; border: 1px solid #293550;
-      border-radius: 16px; padding: 24px; margin-bottom: 20px;
-    }
-    .brand { color: #67e8f9; letter-spacing: 3px; font-size: 13px; }
-    h1 { margin-bottom: 8px; font-size: 32px; }
-    p { color: #aab6cc; line-height: 1.6; }
-    label { display: block; margin-bottom: 10px; font-weight: 600; }
-    textarea {
-      width: 100%; min-height: 430px; padding: 16px;
-      border: 1px solid #354563; border-radius: 10px;
-      background: #080d19; color: #a7f3d0;
-      font: 13px/1.6 Consolas, monospace; resize: vertical;
-    }
-    button {
-      margin-top: 16px; width: 100%; padding: 15px;
-      border: 0; border-radius: 10px; background: #06b6d4;
-      color: #06111c; font-size: 16px; font-weight: 700;
-      cursor: pointer;
-    }
-    button:disabled { opacity: .6; cursor: wait; }
-    #result { display: none; margin-top: 20px; padding: 20px;
-      border-radius: 12px; background: #0b1020; }
-    #result h2 { margin: 0 0 10px; }
-    .normal { color: #6ee7b7; }
-    .attack { color: #fca5a5; }
-    .error { color: #fca5a5; }
-    .note { font-size: 13px; }
-    a { color: #67e8f9; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SentinelML | Security Intelligence</title>
+<style>
+:root {
+  --bg:#080d18; --panel:#111a2b; --panel2:#0b1322;
+  --border:#243249; --text:#edf3ff; --muted:#91a0b8;
+  --cyan:#5ee7f5; --green:#4adea8; --red:#ff7185;
+  --yellow:#facc72;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:14px; line-height:1.6;
+}
+button,textarea { font:inherit; }
+button { cursor:pointer; }
+.layout { display:flex; min-height:100vh; }
+.sidebar {
+  width:230px; flex-shrink:0; padding:26px 18px;
+  border-right:1px solid var(--border); background:#0b1220;
+}
+.brand { font-weight:800; font-size:18px; letter-spacing:1px; }
+.brand span { color:var(--cyan); }
+.brand-sub { color:var(--muted); font-size:11px; margin-top:3px; }
+.nav-label {
+  color:#71819a; font-size:10px; font-weight:700;
+  letter-spacing:1.8px; margin:38px 10px 12px;
+}
+.nav-item {
+  display:block; color:#aab8ce; padding:11px 12px;
+  margin-bottom:5px; border-radius:8px; text-decoration:none;
+}
+.nav-item.active { background:#142b3c; color:var(--cyan); }
+.nav-item:hover { background:#152235; }
+.sidebar-note {
+  margin-top:50px; padding:13px; border:1px solid var(--border);
+  border-radius:10px; color:var(--muted); font-size:12px;
+}
+main { min-width:0; flex:1; padding:30px; max-width:1500px; }
+.topbar {
+  display:flex; justify-content:space-between; align-items:center;
+  gap:15px; flex-wrap:wrap; margin-bottom:28px;
+}
+.eyebrow { color:var(--cyan); font-size:11px; letter-spacing:2px; }
+h1 { font-size:29px; line-height:1.2; margin:5px 0; }
+h2 { font-size:17px; margin:0; }
+h3 { font-size:14px; margin:0 0 12px; }
+.muted { color:var(--muted); }
+.small { font-size:12px; }
+.status {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 12px; border:1px solid var(--border);
+  border-radius:30px; color:var(--muted); font-size:12px;
+}
+.dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); }
+.dot.online { background:var(--green); }
+.grid { display:grid; gap:16px; }
+.metrics { grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:20px; }
+.panel,.metric {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:13px; padding:20px; min-width:0;
+}
+.metric-label { color:var(--muted); font-size:12px; }
+.metric-value { font-size:29px; font-weight:750; margin:7px 0 2px; }
+.metric-foot { color:var(--muted); font-size:11px; }
+.cyan { color:var(--cyan); }
+.green { color:var(--green); }
+.red { color:var(--red); }
+.yellow { color:var(--yellow); }
+.main-grid { grid-template-columns:minmax(0,1.35fr) minmax(280px,.8fr); }
+.panel-head {
+  display:flex; justify-content:space-between; align-items:center;
+  gap:12px; flex-wrap:wrap; margin-bottom:14px;
+}
+.pill {
+  border:1px solid var(--border); border-radius:20px;
+  padding:4px 9px; color:var(--muted); font-size:11px;
+}
+textarea {
+  width:100%; min-height:400px; resize:vertical;
+  background:var(--panel2); color:#b7f7d7;
+  border:1px solid #30415d; border-radius:9px;
+  padding:14px; font:12px/1.7 Consolas,monospace;
+  outline:none;
+}
+textarea:focus { border-color:var(--cyan); }
+.btn {
+  border:0; border-radius:8px; padding:12px 16px;
+  font-weight:750; transition:opacity .15s;
+}
+.btn:disabled { opacity:.55; cursor:wait; }
+.primary { background:var(--cyan); color:#07121c; }
+.secondary { background:#1c2a40; color:var(--text); border:1px solid var(--border); }
+.actions { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+.actions .primary { flex:1; }
+.result {
+  display:none; margin-top:16px; padding:16px;
+  border:1px solid var(--border); border-radius:10px;
+  background:var(--panel2);
+}
+.result.attack { border-color:#713849; }
+.result.normal { border-color:#23664f; }
+.result-title { font-size:19px; font-weight:800; margin-bottom:5px; }
+.notice {
+  margin-top:14px; border-left:3px solid var(--yellow);
+  padding:10px 12px; background:#201d18;
+  color:#d4c6a8; font-size:12px;
+}
+.bar-row {
+  display:grid; grid-template-columns:85px 1fr 48px;
+  align-items:center; gap:10px; margin:15px 0;
+  font-size:12px;
+}
+.bar { height:8px; background:#202d41; border-radius:10px; overflow:hidden; }
+.fill { height:100%; border-radius:10px; background:var(--cyan); }
+.matrix {
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;
+}
+.cell { padding:13px 8px; background:var(--panel2); border-radius:8px; }
+.cell strong { display:block; font-size:19px; }
+.cell span { color:var(--muted); font-size:11px; }
+.section { margin-top:20px; }
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; text-align:left; }
+th,td { padding:12px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+th { color:var(--muted); font-size:11px; font-weight:600; }
+td { font-size:12px; }
+.tag { border-radius:5px; padding:3px 7px; font-size:11px; font-weight:700; }
+.tag.attack { color:var(--red); background:#3a1d2b; }
+.tag.normal { color:var(--green); background:#15382f; }
+.empty { color:var(--muted); text-align:center; padding:25px; }
+footer { padding:24px 0 8px; color:var(--muted); font-size:11px; }
+a { color:var(--cyan); text-decoration:none; }
+@media(max-width:1050px) {
+  .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .main-grid { grid-template-columns:1fr; }
+}
+@media(max-width:650px) {
+  .sidebar { display:none; }
+  main { padding:18px 12px; }
+  h1 { font-size:24px; }
+  .metrics { gap:9px; }
+  .metric { padding:14px; }
+  .metric-value { font-size:23px; }
+  .panel { padding:14px; }
+  textarea { min-height:350px; }
+}
+</style>
 </head>
 <body>
-<main>
-  <header>
-    <div class="brand">● SENTINELML / MACHINE LEARNING</div>
-    <h1>Network Traffic Analysis</h1>
-    <p>Analyze network traffic using a Random Forest classification model.</p>
-    <p>API status: <strong id="apiStatus">Checking...</strong></p>
-  </header>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">◈ SENTINEL<span>ML</span></div>
+    <div class="brand-sub">NETWORK SECURITY INTELLIGENCE</div>
 
-  <section>
-    <h2>Traffic input</h2>
-    <p>Edit the JSON below, then submit it for classification.</p>
-    <label for="traffic">Network traffic features (JSON)</label>
-    <textarea id="traffic" spellcheck="false">{
+    <div class="nav-label">WORKSPACE</div>
+    <a class="nav-item active" href="#overview">▦ &nbsp; Overview</a>
+    <a class="nav-item" href="#analysis">⌕ &nbsp; Traffic Analysis</a>
+    <a class="nav-item" href="#performance">▥ &nbsp; Model Performance</a>
+    <a class="nav-item" href="#history">◷ &nbsp; Prediction History</a>
+
+    <div class="sidebar-note">
+      <div class="cyan">● Portfolio project</div>
+      <p>Machine-learning network traffic classification using a Random Forest model.</p>
+      <a href="/docs">Explore API docs ↗</a>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar" id="overview">
+      <div>
+        <div class="eyebrow">SECURITY OPERATIONS / ML MONITOR</div>
+        <h1>Network Intelligence</h1>
+        <div class="muted">Traffic classification and model evaluation</div>
+      </div>
+      <div class="status"><span class="dot" id="statusDot"></span>
+        API: <strong id="apiStatus">Checking...</strong>
+      </div>
+    </header>
+
+    <section class="grid metrics" aria-label="Model metrics">
+      <div class="metric">
+        <div class="metric-label">TEST ACCURACY</div>
+        <div class="metric-value cyan">90.25%</div>
+        <div class="metric-foot">Held-out test set</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">ATTACK PRECISION</div>
+        <div class="metric-value">98.78%</div>
+        <div class="metric-foot">Predicted attacks that were attacks</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">ATTACK RECALL</div>
+        <div class="metric-value yellow">86.75%</div>
+        <div class="metric-foot">Attacks detected in the test set</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">ATTACK F1-SCORE</div>
+        <div class="metric-value green">92.38%</div>
+        <div class="metric-foot">Precision/recall balance</div>
+      </div>
+    </section>
+
+    <div class="grid main-grid">
+      <section class="panel" id="analysis">
+        <div class="panel-head">
+          <h2>Traffic Analysis</h2>
+          <span class="pill">RANDOM FOREST</span>
+        </div>
+        <p class="muted small">Submit one record containing all required network traffic features.</p>
+        <label for="traffic">Input features · JSON</label>
+        <textarea id="traffic" spellcheck="false">{
   "dur": 0,
   "proto": "tcp",
   "service": "-",
@@ -101,82 +259,212 @@
   "ct_srv_dst": 1,
   "is_sm_ips_ports": 0
 }</textarea>
-    <button id="analyze">Analyze Traffic</button>
+        <div class="actions">
+          <button class="btn primary" id="analyze">Analyze Traffic →</button>
+          <button class="btn secondary" id="reset">Reset Sample</button>
+        </div>
+        <div class="result" id="result" aria-live="polite">
+          <div class="result-title" id="resultTitle"></div>
+          <div id="resultText" class="muted"></div>
+        </div>
+        <div class="notice">
+          This is an educational model prediction, not confirmation of a real cyberattack.
+          The sample above is synthetic.
+        </div>
+      </section>
 
-    <div id="result" aria-live="polite">
-      <h2 id="resultTitle">Result</h2>
-      <p id="resultText"></p>
+      <section class="panel" id="performance">
+        <div class="panel-head">
+          <h2>Model Performance</h2>
+          <span class="pill">TEST SET</span>
+        </div>
+        <p class="muted small">Reported results from the existing evaluation. These are not live metrics.</p>
+        <div class="bar-row">
+          <span>Accuracy</span><div class="bar"><div class="fill" style="width:90.25%"></div></div><strong>90.25%</strong>
+        </div>
+        <div class="bar-row">
+          <span>Precision</span><div class="bar"><div class="fill" style="width:98.78%"></div></div><strong>98.78%</strong>
+        </div>
+        <div class="bar-row">
+          <span>Recall</span><div class="bar"><div class="fill" style="width:86.75%"></div></div><strong>86.75%</strong>
+        </div>
+        <div class="bar-row">
+          <span>F1-score</span><div class="bar"><div class="fill" style="width:92.38%"></div></div><strong>92.38%</strong>
+        </div>
+
+        <h3 style="margin-top:28px">Confusion Matrix</h3>
+        <p class="muted small">Actual class vs predicted class · test set</p>
+        <div class="matrix">
+          <div class="cell"><span>True Negative (TN)</span><strong class="green">54,720</strong></div>
+          <div class="cell"><span>False Positive (FP)</span><strong class="yellow">1,280</strong></div>
+          <div class="cell"><span>False Negative (FN)</span><strong class="red">15,809</strong></div>
+          <div class="cell"><span>True Positive (TP)</span><strong class="green">103,532</strong></div>
+        </div>
+        <p class="muted small">The false negatives matter: some attacks were missed during evaluation.</p>
+      </section>
     </div>
-  </section>
 
-  <p class="note">
-    Educational portfolio demo. Predictions are not proof of a real attack.
-    <a href="/docs">Open API documentation</a>
-  </p>
-</main>
+    <section class="panel section" id="history">
+      <div class="panel-head">
+        <div>
+          <h2>Prediction History</h2>
+          <div class="muted small">Recent predictions saved in this browser only</div>
+        </div>
+        <button class="btn secondary" id="clearHistory">Clear History</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>TIME</th><th>RESULT</th><th>MODEL OUTPUT</th></tr></thead>
+          <tbody id="historyRows"></tbody>
+        </table>
+      </div>
+      <div class="muted small" style="margin-top:12px">
+        Browser-local history is not shared across devices and may disappear if browser data is cleared.
+      </div>
+    </section>
+
+    <footer>
+      SentinelML · Python · FastAPI · scikit-learn · UNSW-NB15
+      &nbsp;·&nbsp; <a href="/docs">API Documentation</a>
+      <br>Portfolio demonstration. Not a production intrusion prevention system.
+    </footer>
+  </main>
+</div>
 
 <script>
-  const statusText = document.getElementById("apiStatus");
-  const button = document.getElementById("analyze");
-  const result = document.getElementById("result");
-  const resultTitle = document.getElementById("resultTitle");
-  const resultText = document.getElementById("resultText");
+const $ = id => document.getElementById(id);
+const textarea = $("traffic");
+const button = $("analyze");
+const result = $("result");
+const originalSample = textarea.value;
+const HISTORY_KEY = "sentinelml_prediction_history_v1";
 
-  fetch("/")
-    .then(response => {
-      if (!response.ok) throw new Error("API unavailable");
-      return response.json();
-    })
-    .then(data => {
-      statusText.textContent = data.status === "running"
-        ? "Connected" : "Responding";
-    })
-    .catch(() => {
-      statusText.textContent = "Could not check";
+function getHistory() {
+  try {
+    const items = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+}
+
+function renderHistory() {
+  const rows = $("historyRows");
+  const history = getHistory();
+  rows.replaceChildren();
+
+  if (!history.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 3;
+    td.className = "empty";
+    td.textContent = "No predictions yet. Analyze traffic to create your first entry.";
+    tr.appendChild(td);
+    rows.appendChild(tr);
+    return;
+  }
+
+  history.forEach(item => {
+    const tr = document.createElement("tr");
+    const time = document.createElement("td");
+    const label = document.createElement("td");
+    const output = document.createElement("td");
+    const tag = document.createElement("span");
+
+    time.textContent = item.time;
+    tag.className = "tag " + (item.label === "Attack" ? "attack" : "normal");
+    tag.textContent = item.label;
+    label.appendChild(tag);
+    output.textContent = String(item.prediction);
+
+    tr.append(time, label, output);
+    rows.appendChild(tr);
+  });
+}
+
+async function checkApi() {
+  try {
+    const response = await fetch("/");
+    if (!response.ok) throw new Error("API unavailable");
+    const data = await response.json();
+    const online = data.status === "running";
+    $("apiStatus").textContent = online ? "Connected" : "Responding";
+    $("statusDot").classList.toggle("online", online);
+  } catch {
+    $("apiStatus").textContent = "Unavailable";
+    $("statusDot").classList.remove("online");
+  }
+}
+
+button.addEventListener("click", async () => {
+  result.style.display = "block";
+  result.className = "result";
+  $("resultTitle").textContent = "Analyzing traffic...";
+  $("resultText").textContent = "Sending features to the model.";
+  button.disabled = true;
+
+  try {
+    const traffic = JSON.parse(textarea.value);
+    if (!traffic || Array.isArray(traffic) || typeof traffic !== "object") {
+      throw new Error("Enter a single JSON object.");
+    }
+
+    const response = await fetch("/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(traffic)
     });
 
-  button.addEventListener("click", async () => {
-    result.style.display = "block";
-    resultTitle.className = "";
-    resultTitle.textContent = "Analyzing...";
-    resultText.textContent = "";
-    button.disabled = true;
-
-    try {
-      const traffic = JSON.parse(
-        document.getElementById("traffic").value
-      );
-
-      const response = await fetch("/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(traffic)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(JSON.stringify(data.detail || data));
-      }
-
-      resultTitle.textContent = data.label === "Attack"
-        ? "⚠ Attack predicted" : "✓ Normal predicted";
-      resultTitle.className = data.label === "Attack"
-        ? "attack" : "normal";
-      resultText.textContent =
-        "Model output: " + data.label +
-        " (prediction: " + data.prediction + ")";
-    } catch (error) {
-      resultTitle.textContent = "Request failed";
-      resultTitle.className = "error";
-      resultText.textContent =
-        error instanceof SyntaxError
-          ? "The JSON is invalid. Check commas, quotes, and braces."
-          : error.message;
-    } finally {
-      button.disabled = false;
+    const data = await response.json();
+    if (!response.ok) {
+      const detail = typeof data.detail === "string"
+        ? data.detail : JSON.stringify(data.detail || data);
+      throw new Error(detail);
     }
-  });
+
+    const isAttack = data.label === "Attack";
+    result.classList.add(isAttack ? "attack" : "normal");
+    $("resultTitle").textContent = isAttack
+      ? "⚠ Attack predicted" : "✓ Normal predicted";
+    $("resultText").textContent =
+      "Model output: " + data.label + " (prediction: " + data.prediction + "). " +
+      "This is a classification result, not proof of a real attack.";
+
+    const history = getHistory();
+    history.unshift({
+      time: new Date().toLocaleString(),
+      label: data.label,
+      prediction: data.prediction
+    });
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 20)));
+    } catch {
+      // The current prediction still displays if browser storage is unavailable.
+    }
+    renderHistory();
+  } catch (error) {
+    result.className = "result";
+    $("resultTitle").textContent = "Request failed";
+    $("resultText").textContent = error instanceof SyntaxError
+      ? "Invalid JSON. Check quotes, commas, and braces."
+      : error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$("reset").addEventListener("click", () => {
+  textarea.value = originalSample;
+  result.style.display = "none";
+});
+
+$("clearHistory").addEventListener("click", () => {
+  try { localStorage.removeItem(HISTORY_KEY); } catch {}
+  renderHistory();
+});
+
+checkApi();
+renderHistory();
 </script>
 </body>
 </html>
