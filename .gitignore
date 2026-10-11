@@ -1,0 +1,28 @@
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Dataset — do not upload
+archive/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Test and cache files
+.pytest_cache/
+.coverage
+
+# OS files
+.DS_Store
+Thumbs.db
+
+
+archive.zip
