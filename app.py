@@ -4,6 +4,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 
@@ -70,7 +71,10 @@ def home():
         "message": "Welcome to SentinelML",
         "status": "running",
     }
-
+    
+@app.get("/dashboard", include_in_schema=False)
+def dashboard():
+    return FileResponse(BASE_DIR / "dashboard.html")
 
 @app.post("/predict")
 def predict(traffic: NetworkTraffic):

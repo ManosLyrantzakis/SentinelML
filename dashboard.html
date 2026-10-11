@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SentinelML | Traffic Analysis</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: 40px 18px;
+      background: #0b1020; color: #e5e7eb;
+      font-family: Inter, Arial, sans-serif;
+    }
+    main { max-width: 900px; margin: auto; }
+    header, section {
+      background: #141c30; border: 1px solid #293550;
+      border-radius: 16px; padding: 24px; margin-bottom: 20px;
+    }
+    .brand { color: #67e8f9; letter-spacing: 3px; font-size: 13px; }
+    h1 { margin-bottom: 8px; font-size: 32px; }
+    p { color: #aab6cc; line-height: 1.6; }
+    label { display: block; margin-bottom: 10px; font-weight: 600; }
+    textarea {
+      width: 100%; min-height: 430px; padding: 16px;
+      border: 1px solid #354563; border-radius: 10px;
+      background: #080d19; color: #a7f3d0;
+      font: 13px/1.6 Consolas, monospace; resize: vertical;
+    }
+    button {
+      margin-top: 16px; width: 100%; padding: 15px;
+      border: 0; border-radius: 10px; background: #06b6d4;
+      color: #06111c; font-size: 16px; font-weight: 700;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: wait; }
+    #result { display: none; margin-top: 20px; padding: 20px;
+      border-radius: 12px; background: #0b1020; }
+    #result h2 { margin: 0 0 10px; }
+    .normal { color: #6ee7b7; }
+    .attack { color: #fca5a5; }
+    .error { color: #fca5a5; }
+    .note { font-size: 13px; }
+    a { color: #67e8f9; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">● SENTINELML / MACHINE LEARNING</div>
+    <h1>Network Traffic Analysis</h1>
+    <p>Analyze network traffic using a Random Forest classification model.</p>
+    <p>API status: <strong id="apiStatus">Checking...</strong></p>
+  </header>
+
+  <section>
+    <h2>Traffic input</h2>
+    <p>Edit the JSON below, then submit it for classification.</p>
+    <label for="traffic">Network traffic features (JSON)</label>
+    <textarea id="traffic" spellcheck="false">{
+  "dur": 0,
+  "proto": "tcp",
+  "service": "-",
+  "state": "FIN",
+  "spkts": 1,
+  "dpkts": 1,
+  "sbytes": 100,
+  "dbytes": 100,
+  "rate": 1,
+  "sttl": 64,
+  "dttl": 64,
+  "sload": 100,
+  "dload": 100,
+  "sloss": 0,
+  "dloss": 0,
+  "sinpkt": 1,
+  "dinpkt": 1,
+  "sjit": 0,
+  "djit": 0,
+  "swin": 0,
+  "stcpb": 0,
+  "dtcpb": 0,
+  "dwin": 0,
+  "tcprtt": 0,
+  "synack": 0,
+  "ackdat": 0,
+  "smean": 100,
+  "dmean": 100,
+  "trans_depth": 0,
+  "response_body_len": 0,
+  "ct_srv_src": 1,
+  "ct_state_ttl": 0,
+  "ct_dst_ltm": 1,
+  "ct_src_dport_ltm": 1,
+  "ct_dst_sport_ltm": 1,
+  "ct_dst_src_ltm": 1,
+  "is_ftp_login": 0,
+  "ct_ftp_cmd": 0,
+  "ct_flw_http_mthd": 0,
+  "ct_src_ltm": 1,
+  "ct_srv_dst": 1,
+  "is_sm_ips_ports": 0
+}</textarea>
+    <button id="analyze">Analyze Traffic</button>
+
+    <div id="result" aria-live="polite">
+      <h2 id="resultTitle">Result</h2>
+      <p id="resultText"></p>
+    </div>
+  </section>
+
+  <p class="note">
+    Educational portfolio demo. Predictions are not proof of a real attack.
+    <a href="/docs">Open API documentation</a>
+  </p>
+</main>
+
+<script>
+  const statusText = document.getElementById("apiStatus");
+  const button = document.getElementById("analyze");
+  const result = document.getElementById("result");
+  const resultTitle = document.getElementById("resultTitle");
+  const resultText = document.getElementById("resultText");
+
+  fetch("/")
+    .then(response => {
+      if (!response.ok) throw new Error("API unavailable");
+      return response.json();
+    })
+    .then(data => {
+      statusText.textContent = data.status === "running"
+        ? "Connected" : "Responding";
+    })
+    .catch(() => {
+      statusText.textContent = "Could not check";
+    });
+
+  button.addEventListener("click", async () => {
+    result.style.display = "block";
+    resultTitle.className = "";
+    resultTitle.textContent = "Analyzing...";
+    resultText.textContent = "";
+    button.disabled = true;
+
+    try {
+      const traffic = JSON.parse(
+        document.getElementById("traffic").value
+      );
+
+      const response = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(traffic)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(JSON.stringify(data.detail || data));
+      }
+
+      resultTitle.textContent = data.label === "Attack"
+        ? "⚠ Attack predicted" : "✓ Normal predicted";
+      resultTitle.className = data.label === "Attack"
+        ? "attack" : "normal";
+      resultText.textContent =
+        "Model output: " + data.label +
+        " (prediction: " + data.prediction + ")";
+    } catch (error) {
+      resultTitle.textContent = "Request failed";
+      resultTitle.className = "error";
+      resultText.textContent =
+        error instanceof SyntaxError
+          ? "The JSON is invalid. Check commas, quotes, and braces."
+          : error.message;
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
