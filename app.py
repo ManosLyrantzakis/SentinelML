@@ -4,6 +4,7 @@ from pathlib import Path
 import json
 import joblib
 import pandas as pd
+import logging
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field,  ConfigDict
@@ -11,7 +12,12 @@ from pydantic import BaseModel, Field,  ConfigDict
 import sqlite3
 from datetime import datetime, timezone
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
 
+logger = logging.getLogger("sentinelml")
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "sentinelml_history.db"
@@ -115,18 +121,37 @@ def predict(traffic: NetworkTraffic):
     features = pd.DataFrame([traffic.model_dump()])
     prediction = int(model.predict(features)[0])
     label = "Attack" if prediction == 1 else "Normal"
-
     timestamp = datetime.now(timezone.utc).isoformat()
 
-    with sqlite3.connect(DATABASE_PATH) as connection:
-        cursor = connection.execute(
-            """
-            INSERT INTO prediction_history (timestamp, prediction, label)
-            VALUES (?, ?, ?)
-            """,
-            (timestamp, prediction, label)
-        )
-        prediction_id = cursor.lastrowid
+    try:
+        with sqlite3.connect(DATABASE_PATH) as connection:
+            cursor = connection.execute(
+                """
+                INSERT INTO prediction_history (timestamp, prediction, label)
+                VALUES (?, ?, ?)
+                """,
+                (timestamp, prediction, label),
+            )
+            prediction_id = cursor.lastrowid
+
+    except sqlite3.Error:
+        logger.exception("Failed to save prediction history")
+        raise
+
+    logger.info(
+        "Prediction saved | id=%s | prediction=%s | label=%s",
+        prediction_id,
+        prediction,
+        label,
+    )
+
+    return {
+        "id": prediction_id,
+        "timestamp": timestamp,
+        "prediction": prediction,
+        "label": label,
+    }
+
 
     return {
         "id": prediction_id,
