@@ -77,3 +77,34 @@ def test_predict_rejects_missing_fields():
     response = client.post("/predict", json={})
 
     assert response.status_code == 422
+    
+
+def test_predict_rejects_extra_fields():
+    traffic = {
+        "unexpected_field": "not allowed"
+    }
+
+    response = client.post("/predict", json=traffic)
+
+    assert response.status_code == 422
+
+
+def test_predict_rejects_negative_duration():
+    traffic = {
+        "dur": -1
+    }
+
+    response = client.post("/predict", json=traffic)
+
+    assert response.status_code == 422
+
+
+def test_predict_rejects_negative_packet_count():
+    traffic = {
+        "spkts": -5
+    }
+
+    response = client.post("/predict", json=traffic)
+
+    assert response.status_code == 422
+

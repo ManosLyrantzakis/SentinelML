@@ -6,7 +6,7 @@ import joblib
 import pandas as pd
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field,  ConfigDict
 
 import sqlite3
 from datetime import datetime, timezone
@@ -41,6 +41,7 @@ init_history_db()
 
 
 class NetworkTraffic(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     dur: float = Field(ge=0)
     proto: str
     service: str
