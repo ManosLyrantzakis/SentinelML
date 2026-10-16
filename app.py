@@ -37,16 +37,23 @@ app = FastAPI(
 
 def init_history_db():
     if DATABASE_URL:
-        with psycopg.connect(DATABASE_URL) as connection:
-            connection.execute("""
-                CREATE TABLE IF NOT EXISTS prediction_history (
-                    id BIGSERIAL PRIMARY KEY,
-                    timestamp TEXT NOT NULL,
-                    prediction INTEGER NOT NULL,
-                    label TEXT NOT NULL
-                )
-            """)
+        print("Database mode: PostgreSQL (Neon)")
+        try:
+            with psycopg.connect(DATABASE_URL) as connection:
+                connection.execute("""
+                    CREATE TABLE IF NOT EXISTS prediction_history (
+                        id BIGSERIAL PRIMARY KEY,
+                        timestamp TEXT NOT NULL,
+                        prediction INTEGER NOT NULL,
+                        label TEXT NOT NULL
+                    )
+                """)
+            print("PostgreSQL history table initialized successfully")
+        except Exception:
+            logger.exception("Failed to initialize PostgreSQL history table")
+            raise
     else:
+        print("Database mode: SQLite")
         with sqlite3.connect(DATABASE_PATH) as connection:
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS prediction_history (
@@ -56,12 +63,10 @@ def init_history_db():
                     label TEXT NOT NULL
                 )
             """)
+        print("SQLite history table initialized successfully")
 
 
 init_history_db()
-
-init_history_db()
-
 
 class NetworkTraffic(BaseModel):
     model_config = ConfigDict(extra="forbid")
