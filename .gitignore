@@ -28,3 +28,13 @@ Thumbs.db
 archive.zip
 # Local prediction history database
 sentinelml_history.db
+
+# Python virtual environments
+.venv/
+.venv-old/
+venv/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
