@@ -8,7 +8,9 @@ import logging
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field,  ConfigDict
-
+from psycopg.rows import dict_row
+import os
+import psycopg
 import sqlite3
 from datetime import datetime, timezone
 
@@ -22,6 +24,8 @@ logger = logging.getLogger("sentinelml")
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "sentinelml_history.db"
 MODEL_PATH = BASE_DIR / "models" / "random_forest_model.joblib"
+DATABASE_URL = os.getenv("DATABASE_URL")
+print("DATABASE_URL configured:", bool(DATABASE_URL))
 
 model = joblib.load(MODEL_PATH)
 
@@ -32,16 +36,29 @@ app = FastAPI(
 )
 
 def init_history_db():
-    with sqlite3.connect(DATABASE_PATH) as connection:
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS prediction_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
-                prediction INTEGER NOT NULL,
-                label TEXT NOT NULL
-            )
-        """)
+    if DATABASE_URL:
+        with psycopg.connect(DATABASE_URL) as connection:
+            connection.execute("""
+                CREATE TABLE IF NOT EXISTS prediction_history (
+                    id BIGSERIAL PRIMARY KEY,
+                    timestamp TEXT NOT NULL,
+                    prediction INTEGER NOT NULL,
+                    label TEXT NOT NULL
+                )
+            """)
+    else:
+        with sqlite3.connect(DATABASE_PATH) as connection:
+            connection.execute("""
+                CREATE TABLE IF NOT EXISTS prediction_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    prediction INTEGER NOT NULL,
+                    label TEXT NOT NULL
+                )
+            """)
 
+
+init_history_db()
 
 init_history_db()
 
@@ -124,17 +141,31 @@ def predict(traffic: NetworkTraffic):
     timestamp = datetime.now(timezone.utc).isoformat()
 
     try:
-        with sqlite3.connect(DATABASE_PATH) as connection:
-            cursor = connection.execute(
-                """
-                INSERT INTO prediction_history (timestamp, prediction, label)
-                VALUES (?, ?, ?)
-                """,
-                (timestamp, prediction, label),
-            )
-            prediction_id = cursor.lastrowid
+        if DATABASE_URL:
+            with psycopg.connect(DATABASE_URL) as connection:
+                cursor = connection.execute(
+                    """
+                    INSERT INTO prediction_history
+                        (timestamp, prediction, label)
+                    VALUES (%s, %s, %s)
+                    RETURNING id
+                    """,
+                    (timestamp, prediction, label),
+                )
+                prediction_id = cursor.fetchone()[0]
+        else:
+            with sqlite3.connect(DATABASE_PATH) as connection:
+                cursor = connection.execute(
+                    """
+                    INSERT INTO prediction_history
+                        (timestamp, prediction, label)
+                    VALUES (?, ?, ?)
+                    """,
+                    (timestamp, prediction, label),
+                )
+                prediction_id = cursor.lastrowid
 
-    except sqlite3.Error:
+    except (sqlite3.Error, psycopg.Error):
         logger.exception("Failed to save prediction history")
         raise
 
@@ -152,33 +183,50 @@ def predict(traffic: NetworkTraffic):
         "label": label,
     }
 
-
-    return {
-        "id": prediction_id,
-        "timestamp": timestamp,
-        "prediction": prediction,
-        "label": label
-    }
-
-
 @app.get("/history")
 def get_history(limit: int = 20):
     limit = max(1, min(limit, 100))
 
-    with sqlite3.connect(DATABASE_PATH) as connection:
-        connection.row_factory = sqlite3.Row
-        rows = connection.execute(
-            """
-            SELECT id, timestamp, prediction, label
-            FROM prediction_history
-            ORDER BY id DESC
-            LIMIT ?
-            """,
-            (limit,)
-        ).fetchall()
+    if DATABASE_URL:
+        with psycopg.connect(
+            DATABASE_URL,
+            row_factory=dict_row,
+        ) as connection:
+            rows = connection.execute(
+                """
+                SELECT id, timestamp, prediction, label
+                FROM prediction_history
+                ORDER BY id DESC
+                LIMIT %s
+                """,
+                (limit,),
+            ).fetchall()
+    else:
+        with sqlite3.connect(DATABASE_PATH) as connection:
+            connection.row_factory = sqlite3.Row
+            rows = connection.execute(
+                """
+                SELECT id, timestamp, prediction, label
+                FROM prediction_history
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
 
     return {"history": [dict(row) for row in rows]}
 
+
+@app.delete("/history")
+def clear_history():
+    if DATABASE_URL:
+        with psycopg.connect(DATABASE_URL) as connection:
+            connection.execute("DELETE FROM prediction_history")
+    else:
+        with sqlite3.connect(DATABASE_PATH) as connection:
+            connection.execute("DELETE FROM prediction_history")
+
+    return {"message": "Prediction history cleared"}
 
 @app.delete("/history")
 def clear_history():
