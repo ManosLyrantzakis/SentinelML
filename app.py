@@ -40,6 +40,14 @@ def init_history_db():
         print("Database mode: PostgreSQL (Neon)")
         try:
             with psycopg.connect(DATABASE_URL) as connection:
+                db_info = connection.execute(
+                    "SELECT current_database(), current_schema()"
+                ).fetchone()
+
+                print(
+                    f"PostgreSQL connected: database={db_info[0]}, schema={db_info[1]}"
+                )
+
                 connection.execute("""
                     CREATE TABLE IF NOT EXISTS prediction_history (
                         id BIGSERIAL PRIMARY KEY,
@@ -48,10 +56,13 @@ def init_history_db():
                         label TEXT NOT NULL
                     )
                 """)
+
             print("PostgreSQL history table initialized successfully")
+
         except Exception:
             logger.exception("Failed to initialize PostgreSQL history table")
             raise
+
     else:
         print("Database mode: SQLite")
         with sqlite3.connect(DATABASE_PATH) as connection:
