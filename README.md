@@ -1,32 +1,51 @@
-# SentinelML — Network Intrusion Detection
+# SentinelML — AI Network Intrusion Detection
 
-SentinelML is a machine learning project that classifies network traffic as **Normal** or **Attack** using the UNSW-NB15 dataset.
+SentinelML is a machine learning application that classifies network traffic as **Normal** or **Attack** using a Random Forest classifier trained on the UNSW-NB15 dataset.
 
-The project combines a Random Forest classifier with a FastAPI backend to expose predictions through a REST API.
+The project combines a machine learning pipeline, a FastAPI REST API, persistent prediction history, and a web dashboard. It is deployed on Render and uses Neon PostgreSQL for cloud-based prediction storage.
+
+## Live Demo
+
+- **Live Dashboard:** https://sentinelml-49na.onrender.com/dashboard
+- **API Documentation (Swagger UI):** https://sentinelml-49na.onrender.com/docs
+- **GitHub Repository:** https://github.com/ManosLyrantzakis/SentinelML
+
+> Note: The deployed service may take a short time to wake up after a period of inactivity.
 
 ## Features
 
 - Network traffic classification using machine learning
-- Data preprocessing with scikit-learn pipelines
-- Random Forest classifier
+- Random Forest model trained on the UNSW-NB15 dataset
+- Data preprocessing and feature preparation with scikit-learn
 - REST API built with FastAPI
-- Interactive API documentation with Swagger UI
+- Interactive API documentation through Swagger UI
+- Persistent prediction history using Neon PostgreSQL
+- Local SQLite database fallback when PostgreSQL is not configured
+- Web dashboard for viewing predictions and history
 - Automated tests with pytest
-- Saved model for inference
+- Continuous integration with GitHub Actions
+- Saved model for inference using joblib
 
 ## Tech Stack
 
-- Python
-- pandas
-- scikit-learn
-- FastAPI
-- Uvicorn
-- joblib
-- pytest
+| Technology | Purpose |
+|---|---|
+| Python | Application and ML development |
+| pandas | Data manipulation |
+| scikit-learn | Preprocessing, model training and inference |
+| Random Forest | Network traffic classification |
+| FastAPI | REST API |
+| Uvicorn | ASGI server |
+| PostgreSQL / Neon | Cloud prediction history |
+| SQLite | Local database fallback |
+| joblib | Model serialization |
+| pytest | Automated testing |
+| GitHub Actions | Continuous integration |
+| Render | Application deployment |
 
 ## Model Performance
 
-Evaluation on the UNSW-NB15 test set:
+Evaluation on the selected UNSW-NB15 test set:
 
 | Metric | Score |
 |---|---:|
@@ -35,9 +54,20 @@ Evaluation on the UNSW-NB15 test set:
 | Attack Recall | 86.75% |
 | Attack F1-score | 92.38% |
 
-**Important:** These results reflect performance on the selected dataset and test split. They do not guarantee the same performance on real-world network traffic.
+These results reflect performance on the selected dataset and test split. They do not guarantee equivalent performance on real-world network traffic.
 
-The model missed some attacks in the test set, so further evaluation and threshold tuning would be necessary before any real-world security use.
+The model missed some attacks in the test set. Further evaluation, false-negative analysis, and threshold tuning would be necessary before considering any real-world security application.
+
+## Architecture
+
+The application follows this workflow:
+
+1. Network traffic features are submitted to the API.
+2. FastAPI validates the input using a Pydantic model.
+3. The trained Random Forest model predicts whether the traffic is Normal or an Attack.
+4. The prediction and timestamp are stored in the configured database.
+5. The API returns the prediction result.
+6. The dashboard displays prediction information and history.
 
 ## Project Structure
 
@@ -65,7 +95,7 @@ cd SentinelML
 
 ### 2. Create a virtual environment
 
-Windows:
+**Windows:**
 
 ```bash
 python -m venv .venv
@@ -78,63 +108,101 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-### 4. Run the API
+### 4. Run the API locally
 
 ```bash
 python -m uvicorn app:app --reload
 ```
 
-The API will be available at:
+The application will be available at:
 
-`http://127.0.0.1:8000`
+- API: http://127.0.0.1:8000
+- API documentation: http://127.0.0.1:8000/docs
+- Dashboard: http://127.0.0.1:8000/dashboard
 
-Interactive API documentation:
+The application uses SQLite when `DATABASE_URL` is not configured. To use PostgreSQL, configure the `DATABASE_URL` environment variable with a valid PostgreSQL connection string.
 
-`http://127.0.0.1:8000/docs`
+**Never commit database credentials or other secrets to GitHub.**
 
-### 5. Run tests
+## API Usage
+
+### Make a prediction
+
+Send a `POST` request to `/predict` with all required network traffic features in the JSON request body.
+
+The endpoint expects the feature fields directly in the request body, not nested inside a `features` object.
+
+You can explore the required fields and submit test requests through the [interactive API documentation](https://sentinelml-49na.onrender.com/docs).
+
+### Example response
+
+```json
+{
+  "id": 1,
+  "timestamp": "2026-10-16T13:19:58.760860+00:00",
+  "prediction": 0,
+  "label": "Normal"
+}
+```
+
+The values above are an illustrative example.
+
+- `0` represents a Normal classification.
+- `1` represents an Attack classification.
+- `id` identifies the stored prediction.
+- `timestamp` records when the prediction was created.
+- `label` provides a human-readable classification.
+
+A model prediction is not, by itself, confirmation that a real attack has occurred.
+
+## Database and Prediction History
+
+SentinelML stores prediction records in a database.
+
+Each record contains:
+
+- Prediction ID
+- Timestamp
+- Numeric prediction
+- Classification label
+
+The deployed application uses Neon PostgreSQL for persistent cloud storage. A SQLite fallback is available for local development when PostgreSQL is not configured.
+
+## Testing
+
+Run the automated test suite with:
 
 ```bash
 python -m pytest -v -p no:cacheprovider
 ```
 
-## API Usage
-
-Send a `POST` request to `/predict` with the required network traffic features in JSON format.
-
-Example response:
-
-```json
-{
-  "prediction": 1,
-  "label": "Attack"
-}
-```
-
-Here, `1` represents the model's Attack classification and `0` represents Normal traffic. This is a model prediction, not confirmation of a real attack.
+GitHub Actions runs automated tests to help verify the application when code changes are pushed to the repository.
 
 ## Dataset
 
-This project uses the UNSW-NB15 network intrusion detection dataset.
+This project uses the UNSW-NB15 network intrusion detection dataset for model development and evaluation.
 
 The dataset files are not included in this repository.
 
 ## Limitations
 
-- This is a portfolio and educational project, not a production-ready intrusion detection system.
-- Predictions depend on the dataset and features used during training.
-- Real-world deployment would require additional validation, monitoring, and security testing.
+- This is an educational and portfolio project, not a production-ready intrusion detection system.
+- Model performance depends on the dataset, feature distribution, and training process.
+- Real-world network traffic may differ significantly from the evaluation data.
+- False negatives and false positives remain possible.
+- Production deployment would require additional validation, monitoring, access controls, and security testing.
 
 ## Future Improvements
 
-- Add Docker support
-- Add automated testing with GitHub Actions
-- Improve evaluation and analyze false negatives
-- Add prediction confidence scores
-- Build a simple web dashboard
+- Add Docker support and containerized deployment.
+- Add prediction confidence scores and probability-based analysis.
+- Expand evaluation with additional datasets.
+- Analyze false positives and false negatives in greater detail.
+- Improve monitoring, observability, and deployment reliability.
 
 ## Author
 
 **Manos Lyrantzakis**
 
-GitHub: [ManosLyrantzakis](https://github.com/ManosLyrantzakis)
+GitHub: https://github.com/ManosLyrantzakis
+
