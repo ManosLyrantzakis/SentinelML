@@ -5,7 +5,8 @@ import json
 import joblib
 import pandas as pd
 import logging
-from fastapi import FastAPI
+import secrets
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field,  ConfigDict
 from psycopg.rows import dict_row
@@ -13,6 +14,7 @@ import os
 import psycopg
 import sqlite3
 from datetime import datetime, timezone
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "sentinelml_history.db"
 MODEL_PATH = BASE_DIR / "models" / "random_forest_model.joblib"
 DATABASE_URL = os.getenv("DATABASE_URL")
-print("DATABASE_URL configured:", bool(DATABASE_URL))
+HISTORY_ADMIN_TOKEN = os.getenv("HISTORY_ADMIN_TOKEN")
 
 model = joblib.load(MODEL_PATH)
 
@@ -80,7 +82,10 @@ def init_history_db():
 init_history_db()
 
 class NetworkTraffic(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+    extra="forbid",
+    allow_inf_nan=False,
+)
     dur: float = Field(ge=0)
     proto: str
     service: str
@@ -234,7 +239,23 @@ def get_history(limit: int = 20):
 
 
 @app.delete("/history")
-def clear_history():
+def clear_history(authorization: str | None = Header(default=None)):
+    if not HISTORY_ADMIN_TOKEN:
+        raise HTTPException(
+            status_code=503,
+            detail="History deletion is not configured.",
+        )
+
+    expected = f"Bearer {HISTORY_ADMIN_TOKEN}"
+
+    if not authorization or not secrets.compare_digest(
+        authorization, expected
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Not authorized.",
+        )
+
     if DATABASE_URL:
         with psycopg.connect(DATABASE_URL) as connection:
             connection.execute("DELETE FROM prediction_history")
@@ -242,11 +263,5 @@ def clear_history():
         with sqlite3.connect(DATABASE_PATH) as connection:
             connection.execute("DELETE FROM prediction_history")
 
-    return {"message": "Prediction history cleared"}
-
-@app.delete("/history")
-def clear_history():
-    with sqlite3.connect(DATABASE_PATH) as connection:
-        connection.execute("DELETE FROM prediction_history")
-
+    logger.info("Prediction history cleared by authorized request")
     return {"message": "Prediction history cleared"}

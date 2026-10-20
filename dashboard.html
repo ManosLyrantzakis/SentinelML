@@ -562,6 +562,7 @@ async function renderHistory() {
 // CLEAR HISTORY: DELETE FROM BACKEND
 // --------------------------------------------------
 
+
 clearHistoryButton.addEventListener("click", async () => {
   if (isClearingHistory) return;
 
@@ -571,6 +572,12 @@ clearHistoryButton.addEventListener("click", async () => {
 
   if (!confirmed) return;
 
+  const adminToken = window.prompt(
+    "Enter admin token to clear prediction history:"
+  );
+
+  if (!adminToken || !adminToken.trim()) return;
+
   isClearingHistory = true;
   clearHistoryButton.disabled = true;
   clearHistoryButton.textContent = "Clearing...";
@@ -578,11 +585,15 @@ clearHistoryButton.addEventListener("click", async () => {
   try {
     const response = await fetch("/history", {
       method: "DELETE",
-      headers: { "Accept": "application/json" }
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${adminToken.trim()}`
+      }
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+
       throw new Error(
         errorData.detail || "Could not clear prediction history."
       );
@@ -590,18 +601,20 @@ clearHistoryButton.addEventListener("click", async () => {
 
     await renderHistory();
 
+    window.alert("Prediction history cleared successfully.");
   } catch (error) {
     console.error("Failed to clear prediction history:", error);
-    window.alert(
-      "Failed to clear history. Check the backend and try again."
-    );
 
+    window.alert(
+      error.message || "Could not clear prediction history."
+    );
   } finally {
     isClearingHistory = false;
     clearHistoryButton.disabled = false;
     clearHistoryButton.textContent = "Clear History";
   }
 });
+
 
 
 // --------------------------------------------------

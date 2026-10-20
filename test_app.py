@@ -197,3 +197,44 @@ def test_predict_logs_database_error(caplog):
     assert response.status_code == 500
     assert "Failed to save prediction history" in caplog.text
     assert "database unavailable" in caplog.text
+
+
+def test_clear_history_rejects_missing_token(monkeypatch):
+    monkeypatch.setattr("app.HISTORY_ADMIN_TOKEN", "test-secret")
+
+    response = client.delete("/history")
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authorized."
+
+
+def test_clear_history_rejects_wrong_token(monkeypatch):
+    monkeypatch.setattr("app.HISTORY_ADMIN_TOKEN", "test-secret")
+
+    response = client.delete(
+        "/history",
+        headers={"Authorization": "Bearer wrong-token"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authorized."
+
+
+def test_clear_history_accepts_valid_token(monkeypatch):
+    from unittest.mock import patch
+
+    monkeypatch.setattr("app.HISTORY_ADMIN_TOKEN", "test-secret")
+    monkeypatch.setattr("app.DATABASE_URL", None)
+
+    with patch("app.sqlite3.connect") as mock_connect:
+        response = client.delete(
+            "/history",
+            headers={"Authorization": "Bearer test-secret"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "Prediction history cleared"
+
+    mock_connect.return_value.__enter__.return_value.execute.assert_called_once_with(
+        "DELETE FROM prediction_history"
+    )
